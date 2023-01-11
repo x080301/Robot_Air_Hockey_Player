@@ -33,10 +33,10 @@ class FCNet(nn.Module):
 
 
 if __name__ == "__main__":
-    x = torch.tensor(np.ones(8)).to(torch.float32)
-    y = torch.tensor(np.zeros(10)).to(torch.float32)  # , device='cuda'
+    x = torch.tensor(np.ones(8)).to(torch.float32).cuda()
+    y = torch.tensor(np.zeros(10)).to(torch.float32).cuda()  # , device='cuda'
 
-    fcnet = FCNet()
+    fcnet = FCNet().cuda()
     optimizer = torch.optim.Adam(fcnet.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
     criterion = torch.nn.BCELoss()
 
