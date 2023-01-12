@@ -5,7 +5,7 @@ class Cylinder:
     y = 0
 
     def __init__(self, radius):
-        self.radius = radius
+        self._radius = radius
 
     def set_position(self, x, y):
         self.x = x
