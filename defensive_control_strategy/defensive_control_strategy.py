@@ -7,32 +7,49 @@
 # aktualisiere Strategieparameter
 # WHILE Iteration < N
 
-from ..DL_model import FCNet
+
 from ..physical_model import Object, Physical_Model
 
 
 class Parameters:
+    Simulation_ratio = 0.02  # Hz-1
+
     class Striker:
-        Radius = 8
+        Radius = 8.0
+        Max_velocity = 25  # per s, one dimension
 
     class Puck:
-        Radius = 2
+        Radius = 2.0
+        Max_velocity = 50  # per s, one dimension
 
     class PlayBoard:
-        L_x = 50
-        L_y = 100
-        D_x = 10
-        D_y = 15
+        L_x = 50.0
+        L_y = 100.0
+        D_x = 10.0  # minimum distance between Striker and longitudinal edge
+        D_y = 15.0  # minimum distance between Striker and Horizontal edge
 
 
-def init_simulation():
-    striker = Object.Striker(Parameters.Striker.Radius)
-    puck = Object.Puck(Parameters.Puck.Radius)
-    play_board = Physical_Model.PlayBoard(Parameters.PlayBoard.L_x,
-                                          Parameters.PlayBoard.L_y,
-                                          Parameters.PlayBoard.D_x,
-                                          Parameters.PlayBoard.D_y)
+class DefensiveModel:
+    def __init__(self):
+        striker = Object.Striker(Parameters.Striker.Radius,
+                                 Parameters.Striker.Max_velocity)
+        puck = Object.Puck(Parameters.Puck.Radius,
+                           Parameters.Puck.Max_velocity)
+        self.play_board = Physical_Model.PlayBoard(Parameters.PlayBoard.L_x,
+                                                   Parameters.PlayBoard.L_y,
+                                                   Parameters.PlayBoard.D_x,
+                                                   Parameters.PlayBoard.D_y,
+                                                   striker,
+                                                   puck,
+                                                   Parameters.Simulation_ratio
+                                                   )
+
+    def run_simulation(self):
+        for i in range(100):
+            self.play_board.new_game()
+            self.play_board.run_till_strike()
 
 
 if __name__ == "__main__":
-    init_simulation()
+    model = DefensiveModel()
+    model.run_simulation()

@@ -46,14 +46,14 @@ class CNN(nn.Module):
 
         x = torch.flatten(x)
         x = self.softmax(x)
-        x = torch.reshape(x, (1, 1, 5, 7))
+        # x = torch.reshape(x, (1, 1, 5, 7))
 
         return x
 
 
 class MonteCarloPolicyGradientLossFunc(nn.Module):
     def __init__(self, deta):
-        super(MylossFunc, self).__init__()
+        super(MonteCarloPolicyGradientLossFunc, self).__init__()
         self.deta = deta
 
     def forward(self, out, label):
@@ -69,6 +69,7 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
 if __name__ == "__main__":
     x = torch.tensor(np.random.random(size=(1, 4, 140, 63))).to(torch.float32).cuda()
     y = torch.tensor(np.zeros((1, 1, 5, 7))).to(torch.float32).cuda()  # , device='cuda'
+    y = torch.flatten(y)
 
     cnn = CNN().cuda()
     optimizer = torch.optim.Adam(cnn.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)

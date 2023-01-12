@@ -5,7 +5,7 @@ import numpy as np
 
 # input 8
 # xr,yr,vxr,vyr,xR,yR,vxR,vyR
-# output 10
+# output Vx_t+1,Vy_t+1
 #
 
 class FCNet(nn.Module):
@@ -15,19 +15,22 @@ class FCNet(nn.Module):
 
         self.fc1 = nn.Linear(8, 8, bias=True)
         self.fc2 = nn.Linear(8, 8, bias=True)
-        self.fc3 = nn.Linear(8, 10, bias=True)
-        self.softmax1 = nn.Softmax(dim=0)
-        self.softmax2 = nn.Softmax(dim=0)
+        self.fc3 = nn.Linear(8, 2, bias=True)
+
+        self.act = nn.Tanh()
 
     def forward(self, x):
         x = self.fc1(x)
         x = self.fc2(x)
         x = self.fc3(x)
 
+        x = self.act(x)
+        """
         x1, x2 = torch.split(x, 5, dim=0)
         x1 = self.softmax1(x1)
         x2 = self.softmax2(x2)
         x = torch.cat((x1, x2), dim=0)
+        """
         # x=torch.matmul(x1, x2.T, out=None)
 
         return x
@@ -50,11 +53,11 @@ class MylossFunc(nn.Module):
 
 if __name__ == "__main__":
     x = torch.tensor(np.ones(8)).to(torch.float32).cuda()
-    y = torch.tensor(np.zeros(10)).to(torch.float32).cuda()  # , device='cuda'
+    y = torch.tensor(np.zeros(2)).to(torch.float32).cuda()  # , device='cuda'
 
     fcnet = FCNet().cuda()
     optimizer = torch.optim.Adam(fcnet.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
-    criterion = torch.nn.BCELoss()
+    criterion = torch.nn.MSELoss()
 
     predictions = fcnet(x)
 
@@ -64,3 +67,6 @@ if __name__ == "__main__":
 
     loss.backward()
     optimizer.step()
+
+    a=predictions[1]
+    print(a)
