@@ -1,4 +1,4 @@
-from ..DL_model import FCNet
+from DL_model import FCNet
 import torch
 
 
@@ -20,6 +20,7 @@ class PlayBoard:
         self.decision = FCNet.FCNet().cuda()
         self.cuda = cuda
         self._simulation_ratio = simulation_ratio
+        self.optimizer = torch.optim.Adam(self.decision.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
 
     def new_game(self):
         self.decision.zero_grad()
@@ -36,8 +37,12 @@ class PlayBoard:
         else:
 
             state = torch.tensor(state)  # .cuda()
-            new_striker_v = self.decision(state)
-            new_striker_v = torch.mul(new_striker_v, self.Striker.Max_velocity)
+            self.output = self.decision(state)
+
+            new_striker_v_mu = torch.mul(self.output, self.Striker.Max_velocity)
+            # new_striker_v = torch.normal(new_striker_v_mu, torch.tensor([Parameters.sigma, Parameters.sigma]))
+            # TODO: It should be gauss distribution
+            new_striker_v = new_striker_v_mu
 
             self.Striker.new_decision(new_striker_v)
 
@@ -47,18 +52,40 @@ class PlayBoard:
             self.Puck.x += self.Puck.vx * self._simulation_ratio
             self.Puck.y += self.Puck.vy * self._simulation_ratio
 
-        if self.strike_check():
-            return False
-        else:
-            return True
+    def end_check(self):
 
-    def strike_check(self):
-        pass
+        if self.Puck.y <= self.Striker.y:
+            return True
+        else:
+            distance = (self.Puck.x - self.Striker.x) ^ 2 + (self.Puck.y - self.Striker.y) ^ 2
+
+            if distance <= (self.Puck._radius + self.Striker._radius):
+                return True
+            else:
+                return False
+
+    def end_punishment(self):
+        P = abs(self.Puck.x - self.Striker.x)
+
+        if not self.Puck.y <= self.Striker.y:
+            P *= 2
+        return P
+
+    def update_decision_model(self):
+
+        criterion = FCNet.MonteCarloPolicyGradientLossFunc()
+        loss = criterion(self.output, self.end_punishment())
+
+        loss.backward()
+
+        self.optimizer.step()
 
     def run_till_strike(self):
 
-        while self.move_step():
-            pass
+        while not self.end_check():
+            self.move_step()
+
+        return self.end_punishment()
 
 
 if __name__ == "__main__":

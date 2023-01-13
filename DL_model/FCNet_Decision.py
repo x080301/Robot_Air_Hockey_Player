@@ -1,5 +1,5 @@
-from . import FCNet
 import torch
+from DL_model import FCNet
 
 
 class Decision:

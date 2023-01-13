@@ -1,5 +1,5 @@
 import torch
-from . import CNN
+from DL_model import CNN
 
 
 class CNNDecision:
@@ -16,4 +16,3 @@ class CNNDecision:
     def restore_checkpoint(self, checkpointfile):
         ckp = torch.load(checkpointfile, 'cuda')
         self._net.load_state_dict(ckp['state_dict'])
-

@@ -8,11 +8,12 @@
 # WHILE Iteration < N
 
 
-from ..physical_model import Object, Physical_Model
+from physical_model import Object, Physical_Model
 
 
 class Parameters:
     Simulation_ratio = 0.02  # Hz-1
+    sigma = 0.5  # gauss distribution of strike velocity
 
     class Striker:
         Radius = 8.0
@@ -45,9 +46,13 @@ class DefensiveModel:
                                                    )
 
     def run_simulation(self):
+
         for i in range(100):
+
             self.play_board.new_game()
-            self.play_board.run_till_strike()
+            self.play_board.update_decision_model()
+
+
 
 
 if __name__ == "__main__":

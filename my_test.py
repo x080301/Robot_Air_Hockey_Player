@@ -12,3 +12,6 @@ x = torch.reshape(x, (1, 1, 5, 7))
 print(x)
 x = torch.flatten(x)
 print(x)
+
+
+torch.nn.MSELoss()

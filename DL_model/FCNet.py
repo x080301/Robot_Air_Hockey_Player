@@ -19,6 +19,8 @@ class FCNet(nn.Module):
 
         self.act = nn.Tanh()
 
+        self.loss = MonteCarloPolicyGradientLossFunc()
+
     def forward(self, x):
         x = self.fc1(x)
         x = self.fc2(x)
@@ -36,19 +38,13 @@ class FCNet(nn.Module):
         return x
 
 
-class MylossFunc(nn.Module):
-    def __init__(self, deta):
-        super(MylossFunc, self).__init__()
-        self.deta = deta
+class MonteCarloPolicyGradientLossFunc(nn.Module):
+    # TODO: Do this part after modifying the physical model. Now the result is only a punishment.
+    def __init__(self):
+        super(MonteCarloPolicyGradientLossFunc, self).__init__()
 
-    def forward(self, out, label):
-        out = torch.nn.functional.softmax(out, dim=1)
-        m = torch.max(out, 1)[0]
-        penalty = self.deta * torch.ones(m.size())
-        loss = torch.where(m > 0.5, m, penalty)
-        loss = torch.sum(loss)
-        loss = Variable(loss, requires_grad=True)
-        return
+    def forward(self, y, R):
+        return y * R
 
 
 if __name__ == "__main__":
@@ -57,7 +53,7 @@ if __name__ == "__main__":
 
     fcnet = FCNet().cuda()
     optimizer = torch.optim.Adam(fcnet.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
-    criterion = torch.nn.MSELoss()
+    criterion = MonteCarloPolicyGradientLossFunc()
 
     predictions = fcnet(x)
 
@@ -66,7 +62,9 @@ if __name__ == "__main__":
     loss = criterion(predictions, y)
 
     loss.backward()
+    print(loss)
+    print(loss.backward)
     optimizer.step()
 
-    a=predictions[1]
+    a = predictions[1]
     print(a)
