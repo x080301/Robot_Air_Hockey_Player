@@ -1,5 +1,6 @@
 from DL_model import FCNet
 import torch
+from defensive_control_strategy.defensive_control_strategy import Parameters
 
 
 class PlayBoard:
@@ -28,21 +29,20 @@ class PlayBoard:
         self.Striker.new_game()
         self.Puck.new_game()
 
-    def move_step(self):
-        state = [self.Puck.x, self.Puck.y, self.Puck.vx, self.Puck.vy,
-                 self.Striker.x, self.Striker.y, self.Striker.vx, self.Striker.vy]
+    def simulation_step(self):
 
         if self.cuda:
             pass
         else:
 
+            state = [self.Puck.x, self.Puck.y, self.Puck.vx, self.Puck.vy, self.Striker.x, self.Striker.y,
+                     self.Striker.vx, self.Striker.vy]
             state = torch.tensor(state)  # .cuda()
-            self.output = self.decision(state)
+            state = torch.reshape(state, (1, 8))
+            y = self.decision(state)
 
-            new_striker_v_mu = torch.mul(self.output, self.Striker.Max_velocity)
-            # new_striker_v = torch.normal(new_striker_v_mu, torch.tensor([Parameters.sigma, Parameters.sigma]))
-            # TODO: It should be gauss distribution
-            new_striker_v = new_striker_v_mu
+            new_striker_v_mu = torch.mul(y, self.Striker.Max_velocity)
+            new_striker_v = torch.normal(new_striker_v_mu, torch.tensor([Parameters.sigma, Parameters.sigma]))
 
             self.Striker.new_decision(new_striker_v)
 
@@ -51,6 +51,17 @@ class PlayBoard:
 
             self.Puck.x += self.Puck.vx * self._simulation_ratio
             self.Puck.y += self.Puck.vy * self._simulation_ratio
+
+            return state, new_striker_v
+
+    def bp_step(self, state_stack, action_stack):  # TODO
+
+        criterion = FCNet.MonteCarloPolicyGradientLossFunc()
+        loss = criterion(self.output, self.end_punishment())
+
+        loss.backward()
+
+        self.optimizer.step()
 
     def end_check(self):
 
@@ -64,28 +75,25 @@ class PlayBoard:
             else:
                 return False
 
-    def end_punishment(self):
+    def end_punishment(self):  # TODO: Reward
         P = abs(self.Puck.x - self.Striker.x)
 
         if not self.Puck.y <= self.Striker.y:
             P *= 2
         return P
 
-    def update_decision_model(self):
-
-        criterion = FCNet.MonteCarloPolicyGradientLossFunc()
-        loss = criterion(self.output, self.end_punishment())
-
-        loss.backward()
-
-        self.optimizer.step()
-
     def run_till_strike(self):
 
+        state_stack = torch.empty(0, 8)
+        action_stack = torch.empty(0, 2)
         while not self.end_check():
-            self.move_step()
+            state, new_striker_v = self.simulation_step()
+            state_stack = torch.cat((state_stack, state), 0)
+            action_stack = torch.cat((action_stack, new_striker_v), 0)
 
-        return self.end_punishment()
+        self.bp_step(state_stack, action_stack)
+
+        return self.end_punishment()  # TODO
 
 
 if __name__ == "__main__":

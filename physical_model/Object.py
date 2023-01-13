@@ -1,7 +1,6 @@
 # import defensive_control_strategy.defensive_control_strategy as dcs
 import random
-from ..defensive_control_strategy.defensive_control_strategy import Parameters
-
+from defensive_control_strategy import defensive_control_strategy
 
 class Cylinder:
     vx = 0

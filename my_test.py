@@ -13,5 +13,8 @@ print(x)
 x = torch.flatten(x)
 print(x)
 
-
 torch.nn.MSELoss()
+
+x = torch.empty(0,2)
+print(x.shape)
+print(x)

@@ -49,7 +49,9 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
 
 if __name__ == "__main__":
     x = torch.tensor(np.ones(8)).to(torch.float32).cuda()
+    x = torch.reshape(x, (1, 8))
     y = torch.tensor(np.zeros(2)).to(torch.float32).cuda()  # , device='cuda'
+    y = torch.reshape(y, (1, 2))
 
     fcnet = FCNet().cuda()
     optimizer = torch.optim.Adam(fcnet.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
@@ -57,9 +59,9 @@ if __name__ == "__main__":
 
     predictions = fcnet(x)
 
-    print(predictions)
+    print(predictions.shape)
 
-    loss = criterion(predictions, y)
+    '''loss = criterion(predictions, y)
 
     loss.backward()
     print(loss)
@@ -67,4 +69,4 @@ if __name__ == "__main__":
     optimizer.step()
 
     a = predictions[1]
-    print(a)
+    print(a)'''
