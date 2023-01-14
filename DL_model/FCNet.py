@@ -1,8 +1,9 @@
 import torch.nn as nn
 import torch
 import numpy as np
-#from defensive_control_strategy.defensive_control_strategy import Parameters
+# from defensive_control_strategy.defensive_control_strategy import Parameters
 from physical_model.Parameters import Parameters
+
 
 # input 8
 # xr,yr,vxr,vyr,xR,yR,vxR,vyR
@@ -47,7 +48,8 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
         super(MonteCarloPolicyGradientLossFunc, self).__init__()
 
     def forward(self, y, action, reward):
-        return nn.functional.mse_loss(action, y) * reward/50
+        return nn.functional.mse_loss(action, y) * reward
+        # return 10.0 + Parameters.Puck._radius + Parameters.Striker._radius - nn.functional.mse_loss(action, y) * reward
 
 
 if __name__ == "__main__":

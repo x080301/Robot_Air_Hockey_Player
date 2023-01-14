@@ -2,9 +2,14 @@ from DL_model import FCNet
 import torch
 # from defensive_control_strategy.defensive_control_strategy import Parameters
 from physical_model.Parameters import Parameters
+import math
 
 
 class PlayBoard:
+    HIT_WALL = 0
+    MISS_PUCK = 1
+    STRIKE = 2
+    ON_GONGING = 3
 
     def __init__(self, l_x, l_y, d_x, d_y, striker, puck, simulation_ratio, cuda=False):
         """
@@ -32,7 +37,6 @@ class PlayBoard:
         self.optimizer = torch.optim.Adam(self.decision.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
 
     def new_game(self):
-        self.decision.zero_grad()
 
         self.Striker.new_game()
         self.Puck.new_game()
@@ -66,30 +70,35 @@ class PlayBoard:
 
         return state, new_striker_v
 
-    def bp_step(self, state_stack, action_stack):
+    def bp_step(self, state_stack, action_stack, end_type):
 
-        reward = (self.D_x - abs(self.Puck.x - self.Striker.x)) ** 3 + self.Puck.y ** 2
+        if end_type is not self.STRIKE:
+            distance = math.sqrt((self.Puck.x - self.Striker.x) ** 2 + (self.Puck.y - self.Striker.y) ** 2)
+            interval = distance - self.Puck._radius - self.Striker._radius
+            reward = 10.0 / (interval ** 2 + 1)
+        else:
+            reward = 10.0 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
 
-        y = self.decision(state_stack)
-        loss = self.decision.loss_function(y, action_stack, reward)
+            y = self.decision(state_stack)
+            loss = self.decision.loss_function(y, action_stack, reward*100)
 
-        loss.backward()
+            loss.backward()
 
-        self.optimizer.step()
+            self.optimizer.step()
 
     def end_check(self):
 
         if self.Puck.y < self.D_y:
-            return True
+            return self.HIT_WALL
         elif self.Puck.y <= self.Striker.y:
-            return True
+            return self.MISS_PUCK
         else:
-            distance = (self.Puck.x - self.Striker.x) ** 2 + (self.Puck.y - self.Striker.y) ** 2
+            distance = math.sqrt((self.Puck.x - self.Striker.x) ** 2 + (self.Puck.y - self.Striker.y) ** 2)
 
             if distance <= (self.Puck._radius + self.Striker._radius):
-                return True
+                return self.STRIKE
             else:
-                return False
+                return self.ON_GONGING
 
     def run_till_gameover(self):
 
@@ -99,12 +108,15 @@ class PlayBoard:
             state_stack = state_stack.cuda()
             action_stack = action_stack.cuda()
 
-        while not self.end_check():
+        end_check_flag = self.end_check()
+        while end_check_flag is self.ON_GONGING:
             state, new_striker_v = self.simulation_step()
             state_stack = torch.cat((state_stack, state), 0)
             action_stack = torch.cat((action_stack, new_striker_v), 0)
 
-        self.bp_step(state_stack, action_stack)
+            end_check_flag = self.end_check()
+
+        self.bp_step(state_stack, action_stack, end_check_flag)
 
         return abs(self.Puck.x - self.Striker.x)
 

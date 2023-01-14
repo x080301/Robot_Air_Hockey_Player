@@ -21,3 +21,5 @@ class Parameters:
         D_y = 15.0  # minimum distance between Striker and Horizontal edge
 
     cuda = True
+
+

@@ -44,7 +44,7 @@ class Puck(Cylinder):
 
         goal_point_x = (random.random() / 3.0 + 0.333) * Parameters.PlayBoard.L_x
 
-        self.vy = -random.random() * self.Max_velocity
+        self.vy = (-random.random() * 0.5 - 0.5) * self.Max_velocity
         self.vx = (self.x - goal_point_x) / self.y * self.vy
 
 
