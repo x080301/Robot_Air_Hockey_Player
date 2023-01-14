@@ -47,7 +47,7 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
         super(MonteCarloPolicyGradientLossFunc, self).__init__()
 
     def forward(self, y, action, reward):
-        return nn.functional.mse_loss(action, y) * reward
+        return nn.functional.mse_loss(action, y) * reward/50
 
 
 if __name__ == "__main__":

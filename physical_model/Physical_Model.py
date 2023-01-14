@@ -39,34 +39,36 @@ class PlayBoard:
 
     def simulation_step(self):
 
+        state = [self.Puck.x, self.Puck.y, self.Puck.vx, self.Puck.vy, self.Striker.x, self.Striker.y,
+                 self.Striker.vx, self.Striker.vy]
+
+        state = torch.tensor(state)  # .cuda()
         if self.cuda:
-            pass
+            state = state.cuda()
+        state = torch.reshape(state, (1, 8))
+
+        # y = self.decision(state)
+        # new_striker_v_mu = torch.mul(y, self.Striker.Max_velocity)
+        new_striker_v_mu = self.decision(state)
+
+        if self.cuda:
+            new_striker_v = torch.normal(new_striker_v_mu, torch.tensor([Parameters.sigma, Parameters.sigma]).cuda())
         else:
-
-            state = [self.Puck.x, self.Puck.y, self.Puck.vx, self.Puck.vy, self.Striker.x, self.Striker.y,
-                     self.Striker.vx, self.Striker.vy]
-            state = torch.tensor(state)  # .cuda()
-            state = torch.reshape(state, (1, 8))
-
-            # y = self.decision(state)
-            # new_striker_v_mu = torch.mul(y, self.Striker.Max_velocity)
-            new_striker_v_mu = self.decision(state)
-
             new_striker_v = torch.normal(new_striker_v_mu, torch.tensor([Parameters.sigma, Parameters.sigma]))
 
-            self.Striker.new_decision(new_striker_v)
+        self.Striker.new_decision(new_striker_v)
 
-            self.Striker.x += self.Striker.vx * self._simulation_ratio
-            self.Striker.y += self.Striker.vy * self._simulation_ratio
+        self.Striker.x += self.Striker.vx * self._simulation_ratio
+        self.Striker.y += self.Striker.vy * self._simulation_ratio
 
-            self.Puck.x += self.Puck.vx * self._simulation_ratio
-            self.Puck.y += self.Puck.vy * self._simulation_ratio
+        self.Puck.x += self.Puck.vx * self._simulation_ratio
+        self.Puck.y += self.Puck.vy * self._simulation_ratio
 
-            return state, new_striker_v
+        return state, new_striker_v
 
     def bp_step(self, state_stack, action_stack):
 
-        reward = (self.D_x - abs(self.Puck.x - self.Striker.x)) ** 3
+        reward = (self.D_x - abs(self.Puck.x - self.Striker.x)) ** 3 + self.Puck.y ** 2
 
         y = self.decision(state_stack)
         loss = self.decision.loss_function(y, action_stack, reward)
@@ -77,7 +79,9 @@ class PlayBoard:
 
     def end_check(self):
 
-        if self.Puck.y <= self.Striker.y:
+        if self.Puck.y < self.D_y:
+            return True
+        elif self.Puck.y <= self.Striker.y:
             return True
         else:
             distance = (self.Puck.x - self.Striker.x) ** 2 + (self.Puck.y - self.Striker.y) ** 2
@@ -87,10 +91,14 @@ class PlayBoard:
             else:
                 return False
 
-    def run_till_strike(self):
+    def run_till_gameover(self):
 
         state_stack = torch.empty(0, 8)
         action_stack = torch.empty(0, 2)
+        if self.cuda:
+            state_stack = state_stack.cuda()
+            action_stack = action_stack.cuda()
+
         while not self.end_check():
             state, new_striker_v = self.simulation_step()
             state_stack = torch.cat((state_stack, state), 0)

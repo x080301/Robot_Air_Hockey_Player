@@ -19,3 +19,5 @@ class Parameters:
         L_y = 100.0
         D_x = 10.0  # minimum distance between Striker and longitudinal edge
         D_y = 15.0  # minimum distance between Striker and Horizontal edge
+
+    cuda = True

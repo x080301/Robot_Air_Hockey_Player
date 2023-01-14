@@ -14,32 +14,36 @@ from physical_model.Parameters import Parameters
 
 class DefensiveModel:
     def __init__(self):
-        striker = Object.Striker(Parameters.Striker.Radius,
-                                 Parameters.Striker.Max_velocity)
-        puck = Object.Puck(Parameters.Puck.Radius,
-                           Parameters.Puck.Max_velocity)
+        striker = Object.Striker(Parameters.Striker.Radius, Parameters.Striker.Max_velocity)
+        puck = Object.Puck(Parameters.Puck.Radius, Parameters.Puck.Max_velocity)
+
         self.play_board = Physical_Model.PlayBoard(Parameters.PlayBoard.L_x,
                                                    Parameters.PlayBoard.L_y,
                                                    Parameters.PlayBoard.D_x,
                                                    Parameters.PlayBoard.D_y,
                                                    striker,
                                                    puck,
-                                                   Parameters.Simulation_ratio
+                                                   Parameters.Simulation_ratio,
+                                                   cuda=Parameters.cuda
                                                    )
 
     def run_simulation(self):
-        for i in range(100):
-            self.play_board.new_game()
 
-            print(1)
-            for j in range(1000):
-                print(2)
-                distance = self.play_board.run_till_strike()
+        distance_mean = 0
+        for j in range(1000):
+            for i in range(1000):
+                self.play_board.new_game()
+                distance = self.play_board.run_till_gameover()
 
-                print("end distance is {:.3f}".format(float(distance)))
+                if i % 100 == 0:
+                    print("{}st end distance is {:.3f}".format(i, float(distance_mean / 100)))
+                    distance_mean = distance
 
-                if j == 20:
-                    self.play_board.save_checkpoint(i)
+                else:
+                    distance_mean += distance
+
+
+            self.play_board.save_checkpoint(j)
 
 
 if __name__ == "__main__":
