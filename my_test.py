@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from DL_model.FCNet import FCNet
 
 print(torch.__version__)
 print(torch.cuda.is_available())
@@ -18,3 +19,8 @@ torch.nn.MSELoss()
 x = torch.empty(0,2)
 print(x.shape)
 print(x)
+
+decision=FCNet()
+
+torch.save({'state_dict': decision.state_dict()}, 'checkpoint_{:03d}.ckp'.format(1))
+#torch.save({'state_dict': decision.state_dict()}, 'checkpoints/checkpoint_{:03d}.ckp'.format(1))

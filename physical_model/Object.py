@@ -1,6 +1,8 @@
 # import defensive_control_strategy.defensive_control_strategy as dcs
 import random
-from defensive_control_strategy import defensive_control_strategy
+# from defensive_control_strategy import defensive_control_strategy
+from physical_model.Parameters import Parameters
+
 
 class Cylinder:
     vx = 0
@@ -31,8 +33,8 @@ class Striker(Cylinder):
         self.y = Parameters.PlayBoard.D_y / 4.0
 
     def new_decision(self, vxy):
-        self.vx = vxy[0]
-        self.vy = vxy[1]
+        self.vx = vxy[0, 0]
+        self.vy = vxy[0, 1]
 
 
 class Puck(Cylinder):

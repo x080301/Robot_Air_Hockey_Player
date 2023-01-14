@@ -1,7 +1,8 @@
 import torch.nn as nn
 import torch
 import numpy as np
-
+#from defensive_control_strategy.defensive_control_strategy import Parameters
+from physical_model.Parameters import Parameters
 
 # input 8
 # xr,yr,vxr,vyr,xR,yR,vxR,vyR
@@ -19,7 +20,7 @@ class FCNet(nn.Module):
 
         self.act = nn.Tanh()
 
-        self.loss = MonteCarloPolicyGradientLossFunc()
+        self.loss_function = MonteCarloPolicyGradientLossFunc()
 
     def forward(self, x):
         x = self.fc1(x)
@@ -27,6 +28,8 @@ class FCNet(nn.Module):
         x = self.fc3(x)
 
         x = self.act(x)
+
+        x = torch.mul(x, Parameters.Striker.Max_velocity)
         """
         x1, x2 = torch.split(x, 5, dim=0)
         x1 = self.softmax1(x1)
@@ -43,8 +46,8 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
     def __init__(self):
         super(MonteCarloPolicyGradientLossFunc, self).__init__()
 
-    def forward(self, y, R):
-        return y * R
+    def forward(self, y, action, reward):
+        return nn.functional.mse_loss(action, y) * reward
 
 
 if __name__ == "__main__":
