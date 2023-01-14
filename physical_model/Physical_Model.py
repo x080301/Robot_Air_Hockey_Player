@@ -79,12 +79,12 @@ class PlayBoard:
         else:
             reward = 10.0 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
 
-            y = self.decision(state_stack)
-            loss = self.decision.loss_function(y, action_stack, reward*100)
+        y = self.decision(state_stack)
+        loss = self.decision.loss_function(y, action_stack, reward*100)
 
-            loss.backward()
+        loss.backward()
 
-            self.optimizer.step()
+        self.optimizer.step()
 
     def end_check(self):
 

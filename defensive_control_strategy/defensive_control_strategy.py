@@ -31,10 +31,10 @@ class DefensiveModel:
 
         distance_mean = 0
         for j in range(1000):
-            for i in range(10000):
+            for i in range(1000):
                 self.play_board.new_game()
 
-                if i % 10 == 0:
+                if i % 100 == 0:
                     self.play_board.decision.zero_grad()
 
                 distance = self.play_board.run_till_gameover()

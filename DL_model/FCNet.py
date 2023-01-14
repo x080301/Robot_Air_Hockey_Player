@@ -28,9 +28,13 @@ class FCNet(nn.Module):
         x = self.fc2(x)
         x = self.fc3(x)
 
+        x = x / 100
         x = self.act(x)
+        # print(x)
 
         x = torch.mul(x, Parameters.Striker.Max_velocity)
+
+        # print(x)
         """
         x1, x2 = torch.split(x, 5, dim=0)
         x1 = self.softmax1(x1)
@@ -48,7 +52,7 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
         super(MonteCarloPolicyGradientLossFunc, self).__init__()
 
     def forward(self, y, action, reward):
-        return nn.functional.mse_loss(action, y) * reward
+        return nn.functional.mse_loss(action, y)
         # return 10.0 + Parameters.Puck._radius + Parameters.Striker._radius - nn.functional.mse_loss(action, y) * reward
 
 
