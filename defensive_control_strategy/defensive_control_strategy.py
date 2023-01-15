@@ -30,8 +30,8 @@ class DefensiveModel:
     def run_simulation(self):
 
         distance_mean = 0
-        for j in range(1000):
-            for i in range(1000):
+        for j in range(2000):
+            for i in range(200):
                 self.play_board.new_game()
 
                 if i % 100 == 0:
@@ -45,11 +45,11 @@ class DefensiveModel:
 
                 else:
                     distance_mean += distance
+            if j % 200 == 0:
+                for param_group in self.play_board.optimizer.param_groups:
+                    param_group['lr'] *= 0.5
 
-            for param_group in self.play_board.optimizer.param_groups:
-                param_group['lr'] *= 0.5
-
-            self.play_board.save_checkpoint(j)
+            self.play_board.save_checkpoint(j, distance_mean/100)
 
 
 if __name__ == "__main__":

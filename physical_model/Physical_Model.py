@@ -77,10 +77,11 @@ class PlayBoard:
             interval = distance - self.Puck._radius - self.Striker._radius
             reward = 10.0 / (interval ** 2 + 1)
         else:
-            reward = 10.0 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
+            reward = 5 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
+            # 10.0 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
 
         y = self.decision(state_stack)
-        loss = self.decision.loss_function(y, action_stack, reward*100)
+        loss = self.decision.loss_function(y, action_stack, reward * 20)
 
         loss.backward()
 
@@ -120,11 +121,10 @@ class PlayBoard:
 
         return abs(self.Puck.x - self.Striker.x)
 
-    def save_checkpoint(self, iteration):
+    def save_checkpoint(self, iteration, distance):
 
-        distance = abs(self.Puck.x - self.Striker.x)
         torch.save({'state_dict': self.decision.state_dict()},
-                   'checkpoints/checkpoint_{:03d}_{:.3f}.ckp'.format(iteration, distance))
+                   'checkpoints/checkpoint_{:04d}_{:.3f}.ckp'.format(iteration, distance))
 
 
 if __name__ == "__main__":
