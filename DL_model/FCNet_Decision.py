@@ -13,9 +13,7 @@ class Decision:
         if checkpointfile is not None:
             self.restore_checkpoint(checkpointfile)
 
-    def restore_checkpoint(self, checkpointfile):
-        ckp = torch.load(checkpointfile, 'cuda')
-        self._net.load_state_dict(ckp['state_dict'])
+
 
 
 if __name__ == "__main__":

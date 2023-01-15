@@ -10,6 +10,7 @@
 
 from physical_model import Object, Physical_Model
 from physical_model.Parameters import Parameters
+from auxiliary_function.auxiliary_function import plot_result
 
 
 class DefensiveModel:
@@ -27,31 +28,75 @@ class DefensiveModel:
                                                    cuda=Parameters.cuda
                                                    )
 
-    def run_simulation(self):
+    def test(self):
+        self.play_board.restore_checkpoint('checkpoints/checkpoint_0400_7.422.ckp')
 
+        Hit_num = 0
+        for i in range(100):
+
+            self.play_board.new_game()
+            distance, _ = self.play_board.run_test()
+            if distance <= (Parameters.Puck.Radius + Parameters.Striker.Radius):
+                Hit_num += 1
+            print(distance)
+        Hit_rat = Hit_num / 100
+        print(Hit_rat)
+
+        self.play_board.new_game()
+        distance, state_stack = self.play_board.run_test()
+        Px = state_stack[:, 0].cpu().numpy()
+        Py = state_stack[:, 1].cpu().numpy()
+
+        Sx = state_stack[:, 4].cpu().numpy()
+        Sy = state_stack[:, 5].cpu().numpy()
+
+        plot_result(Px, Py, Sx, Sy)
+
+    def fine_simulation(self):
+        self.play_board.restore_checkpoint('checkpoints/checkpoint_0400_7.422.ckp')
         distance_mean = 0
-        for j in range(2000):
-            for i in range(200):
-                self.play_board.new_game()
+        K = 100
 
-                if i % 100 == 0:
-                    self.play_board.decision.zero_grad()
+        for i in range(100000):
+            self.play_board.new_game()
 
-                distance = self.play_board.run_till_gameover()
+            distance = self.play_board.run_till_gameover()
 
-                if i % 100 == 0:
-                    print("{}st end distance is {:.3f}".format(i, float(distance_mean / 100)))
-                    distance_mean = distance
+            self.play_board.optimizer.step()
 
-                else:
-                    distance_mean += distance
-            if j % 200 == 0:
-                for param_group in self.play_board.optimizer.param_groups:
-                    param_group['lr'] *= 0.5
+            if i % K == 0:
+                self.play_board.decision.zero_grad()
+                print("{}st end distance is {:.3f}".format(i, float(distance_mean / K)))
+                self.play_board.save_checkpoint(i, distance_mean / K)
+                distance_mean = distance
+            else:
+                distance_mean += distance
 
-            self.play_board.save_checkpoint(j, distance_mean/100)
+
+def run_simulation(self):
+    distance_mean = 0
+    K = 100
+
+    for i in range(100000):
+        self.play_board.new_game()
+
+        distance = self.play_board.run_till_gameover()
+
+        self.play_board.optimizer.step()
+
+        if i % K == 0:
+            self.play_board.decision.zero_grad()
+            print("{}st end distance is {:.3f}".format(i, float(distance_mean / K)))
+            self.play_board.save_checkpoint(i, distance_mean / K)
+            distance_mean = distance
+        else:
+            distance_mean += distance
+
+        """if i % 1000 == 0:
+            for param_group in self.play_board.optimizer.param_groups:
+                param_group['lr'] *= 0.5"""
 
 
 if __name__ == "__main__":
     model = DefensiveModel()
-    model.run_simulation()
+    model.test()

@@ -41,6 +41,10 @@ class PlayBoard:
         self.Striker.new_game()
         self.Puck.new_game()
 
+    def restore_checkpoint(self, checkpointfile):
+        ckp = torch.load(checkpointfile, 'cuda')
+        self.decision.load_state_dict(ckp['state_dict'])
+
     def simulation_step(self):
 
         state = [self.Puck.x, self.Puck.y, self.Puck.vx, self.Puck.vy, self.Striker.x, self.Striker.y,
@@ -70,14 +74,15 @@ class PlayBoard:
 
         return state, new_striker_v
 
-    def bp_step(self, state_stack, action_stack, end_type):
+    def bp_step(self, state_stack, action_stack):
 
-        if end_type is not self.STRIKE:
-            distance = math.sqrt((self.Puck.x - self.Striker.x) ** 2 + (self.Puck.y - self.Striker.y) ** 2)
-            interval = distance - self.Puck._radius - self.Striker._radius
-            reward = 10.0 / (interval ** 2 + 1)
+        distance = math.sqrt((self.Puck.x - self.Striker.x) ** 2 + (self.Puck.y - self.Striker.y) ** 2)
+        interval = distance - self.Puck._radius - self.Striker._radius
+
+        if interval > 0:
+            reward = 10.0 / (interval ** 2 + abs(self.Puck.x - self.Striker.x) + 1)
         else:
-            reward = 5 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
+            reward = 10.0 / (abs(self.Puck.x - self.Striker.x) + 1)
             # 10.0 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
 
         y = self.decision(state_stack)
@@ -85,11 +90,11 @@ class PlayBoard:
 
         loss.backward()
 
-        self.optimizer.step()
+        # self.optimizer.step()
 
     def end_check(self):
 
-        if self.Puck.y < self.D_y:
+        if self.Puck.y <= self.D_y:
             return self.HIT_WALL
         elif self.Puck.y <= self.Striker.y:
             return self.MISS_PUCK
@@ -100,6 +105,24 @@ class PlayBoard:
                 return self.STRIKE
             else:
                 return self.ON_GONGING
+
+    def run_test(self):
+
+        state_stack = torch.empty(0, 8)
+        action_stack = torch.empty(0, 2)
+        if self.cuda:
+            state_stack = state_stack.cuda()
+            action_stack = action_stack.cuda()
+
+        end_check_flag = self.end_check()
+        while end_check_flag is self.ON_GONGING:
+            state, new_striker_v = self.simulation_step()
+            state_stack = torch.cat((state_stack, state), 0)
+            action_stack = torch.cat((action_stack, new_striker_v), 0)
+
+            end_check_flag = self.end_check()
+
+        return abs(self.Puck.x - self.Striker.x), state_stack
 
     def run_till_gameover(self):
 
@@ -117,7 +140,7 @@ class PlayBoard:
 
             end_check_flag = self.end_check()
 
-        self.bp_step(state_stack, action_stack, end_check_flag)
+        self.bp_step(state_stack, action_stack)
 
         return abs(self.Puck.x - self.Striker.x)
 

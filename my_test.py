@@ -1,26 +1,23 @@
-import torch
-import torch.nn as nn
-import numpy as np
-from DL_model.FCNet import FCNet
+import matplotlib.pyplot as plt
 
-print(torch.__version__)
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
+circle1 = plt.Circle(([1,0], [1,0]), 0.2, color='r')
 
-x = np.arange(1, 36, 1)
-x = torch.tensor(x)
-x = torch.reshape(x, (1, 1, 5, 7))
-print(x)
-x = torch.flatten(x)
-print(x)
+circle2 = plt.Circle((0.5, 0.5), 0.2, color='blue')
 
-torch.nn.MSELoss()
+circle3 = plt.Circle((1, 1), 0.2, color='g', clip_on=False)
 
-x = torch.empty(0,2)
-print(x.shape)
-print(x)
+fig, ax = plt.subplots() # note we must use plt.subplots, not plt.subplot
 
-decision=FCNet()
+# (or if you have an existing figure)
 
-torch.save({'state_dict': decision.state_dict()}, 'checkpoint_{:03d}.ckp'.format(1))
-#torch.save({'state_dict': decision.state_dict()}, 'checkpoints/checkpoint_{:03d}.ckp'.format(1))
+# fig = plt.gcf()
+
+# ax = fig.gca()
+
+ax.add_artist(circle1)
+
+ax.add_artist(circle2)
+
+ax.add_artist(circle3)
+
+plt.show()
