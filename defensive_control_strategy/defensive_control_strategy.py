@@ -28,8 +28,8 @@ class DefensiveModel:
                                                    cuda=Parameters.cuda
                                                    )
 
-    def test(self):
-        self.play_board.restore_checkpoint('checkpoints/checkpoint_0400_7.422.ckp')
+    def test(self, check_point):
+        self.play_board.restore_checkpoint(check_point)
 
         Hit_num = 0
         for i in range(100):
@@ -49,11 +49,12 @@ class DefensiveModel:
 
         Sx = state_stack[:, 4].cpu().numpy()
         Sy = state_stack[:, 5].cpu().numpy()
+        print(distance)
 
         plot_result(Px, Py, Sx, Sy)
 
     def fine_simulation(self):
-        self.play_board.restore_checkpoint('checkpoints/checkpoint_0400_7.422.ckp')
+
         distance_mean = 0
         K = 100
 
@@ -72,31 +73,34 @@ class DefensiveModel:
             else:
                 distance_mean += distance
 
-
-def run_simulation(self):
-    distance_mean = 0
-    K = 100
-
-    for i in range(100000):
-        self.play_board.new_game()
-
-        distance = self.play_board.run_till_gameover()
-
-        self.play_board.optimizer.step()
-
-        if i % K == 0:
-            self.play_board.decision.zero_grad()
-            print("{}st end distance is {:.3f}".format(i, float(distance_mean / K)))
-            self.play_board.save_checkpoint(i, distance_mean / K)
-            distance_mean = distance
-        else:
-            distance_mean += distance
-
-        """if i % 1000 == 0:
+    def run_simulation(self, fine_rate=None, check_point=None):
+        distance_mean = 0
+        K = 50
+        if fine_rate is not None:
+            self.play_board.restore_checkpoint(check_point)
             for param_group in self.play_board.optimizer.param_groups:
-                param_group['lr'] *= 0.5"""
+                param_group['lr'] *= fine_rate
+
+        for i in range(100000):
+            self.play_board.new_game()
+
+            distance = self.play_board.run_till_gameover()
+
+            self.play_board.optimizer.step()
+            if i % K == 0:
+                self.play_board.decision.zero_grad()
+                print("{}st end distance is {:.3f}".format(i, float(distance_mean / K)))
+                self.play_board.save_checkpoint(i, distance_mean / K)
+                distance_mean = distance
+            else:
+                distance_mean += distance
+
+            """if i % 1000 == 0:
+                for param_group in self.play_board.optimizer.param_groups:
+                    param_group['lr'] *= 0.5"""
 
 
 if __name__ == "__main__":
     model = DefensiveModel()
-    model.test()
+    #model.run_simulation()
+    model.test('checkpoints/checkpoint_0400_7.422.ckp')

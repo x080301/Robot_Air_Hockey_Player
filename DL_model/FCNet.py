@@ -52,7 +52,7 @@ class MonteCarloPolicyGradientLossFunc(nn.Module):
         super(MonteCarloPolicyGradientLossFunc, self).__init__()
 
     def forward(self, y, action, reward):
-        return nn.functional.mse_loss(action, y)
+        return nn.functional.mse_loss(action, y) * reward
         # return 10.0 + Parameters.Puck._radius + Parameters.Striker._radius - nn.functional.mse_loss(action, y) * reward
 
 

@@ -80,13 +80,13 @@ class PlayBoard:
         interval = distance - self.Puck._radius - self.Striker._radius
 
         if interval > 0:
-            reward = 10.0 / (interval ** 2 + abs(self.Puck.x - self.Striker.x) + 1)
+            reward = 10.0 / (interval ** 3 + abs(self.Puck.x - self.Striker.x) + 1)
         else:
             reward = 10.0 / (abs(self.Puck.x - self.Striker.x) + 1)
             # 10.0 + self.Puck._radius + self.Striker._radius - abs(self.Puck.x - self.Striker.x)
 
         y = self.decision(state_stack)
-        loss = self.decision.loss_function(y, action_stack, reward * 20)
+        loss = self.decision.loss_function(y, action_stack, reward*20)
 
         loss.backward()
 

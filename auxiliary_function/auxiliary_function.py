@@ -9,12 +9,12 @@ def plot_result(Px_axis_data, Py_axis_data, Sx_axis_data, Sy_axis_data):
     plt.ylim((0, Parameters.PlayBoard.L_y))
 
     for i in range(Py_axis_data.shape[0]):
-        circle = plt.Circle((Px_axis_data[i], Py_axis_data[i]), 8, fill=False)
+        circle = plt.Circle((Px_axis_data[i], Py_axis_data[i]), 2, fill=False)
 
         ax.add_artist(circle)
 
     for i in range(Sy_axis_data.shape[0]):
-        circle = plt.Circle((Sx_axis_data[i], Sy_axis_data[i]), 2, fill=False)
+        circle = plt.Circle((Sx_axis_data[i], Sy_axis_data[i]), 8, fill=False)
 
         ax.add_artist(circle)
 
