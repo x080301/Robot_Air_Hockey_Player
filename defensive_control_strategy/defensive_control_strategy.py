@@ -32,14 +32,14 @@ class DefensiveModel:
         self.play_board.restore_checkpoint(check_point)
 
         Hit_num = 0
-        for i in range(100):
+        for i in range(1000):
 
             self.play_board.new_game()
             distance, _ = self.play_board.run_test()
             if distance <= (Parameters.Puck.Radius + Parameters.Striker.Radius):
                 Hit_num += 1
-            print(distance)
-        Hit_rat = Hit_num / 100
+            #print(distance)
+        Hit_rat = Hit_num / 1000
         print(Hit_rat)
 
         self.play_board.new_game()
@@ -81,13 +81,15 @@ class DefensiveModel:
             for param_group in self.play_board.optimizer.param_groups:
                 param_group['lr'] *= fine_rate
 
-        for i in range(100000):
+        for i in range(10000):
             self.play_board.new_game()
 
             distance = self.play_board.run_till_gameover()
 
-            self.play_board.optimizer.step()
+            # self.play_board.optimizer.step()
             if i % K == 0:
+
+                self.play_board.optimizer.step()
                 self.play_board.decision.zero_grad()
                 print("{}st end distance is {:.3f}".format(i, float(distance_mean / K)))
                 self.play_board.save_checkpoint(i, distance_mean / K)
@@ -102,5 +104,5 @@ class DefensiveModel:
 
 if __name__ == "__main__":
     model = DefensiveModel()
-    #model.run_simulation()
-    model.test('checkpoints/checkpoint_0400_7.422.ckp')
+    #model.run_simulation(fine_rate=0.01, check_point='checkpoints/checkpoint_0400_7.422.ckp')
+    model.test('checkpoints/checkpoint_1300_5.088.ckp')
